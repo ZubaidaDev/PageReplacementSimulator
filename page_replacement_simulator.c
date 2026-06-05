@@ -630,11 +630,11 @@ void runLFUAging() {
 /* -------------------- MRU (Most Recently Used) Algorithm -------------------- */
 
 void runMRU() {
-    int frame[FRAMES];
-    int lastUsed[FRAMES];
+    int frame[MAX_FRAMES];
+    int lastUsed[MAX_FRAMES];
 
-    int historyFrame[FRAMES][N];
-    char* historyStatus[N];
+    int historyFrame[MAX_FRAMES][MAX_N];
+    char* historyStatus[MAX_N];
 
     int i, j;
     int page;
@@ -648,9 +648,9 @@ void runMRU() {
     int victimIndex;
     int newestTime;
 
-    int totalDashes = 13 + (N * 8);
+    int totalDashes = 13 + (n * 8);
 
-    for (i = 0; i < FRAMES; i++) {
+    for (i = 0; i < frames; i++) {
         frame[i] = -1;
         lastUsed[i] = 0;
     }
@@ -658,13 +658,13 @@ void runMRU() {
     printf("\nMRU Page Replacement\n");
     printf("Page that was most recently used is replaced.\n\n");
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         page = refString[i];
         found = 0;
         time++;
 
         // Check if requested page is already in memory
-        for (j = 0; j < FRAMES; j++) {
+        for (j = 0; j < frames; j++) {
             if (frame[j] == page) {
                 found = 1;
                 lastUsed[j] = time;
@@ -680,7 +680,7 @@ void runMRU() {
             historyStatus[i] = "FAULT";
 
             // If empty frame exists, insert page directly
-            if (filled < FRAMES) {
+            if (filled < frames) {
                 frame[filled] = page;
                 lastUsed[filled] = time;
                 filled++;
@@ -690,7 +690,7 @@ void runMRU() {
                 victimIndex = 0;
                 newestTime = lastUsed[0];
 
-                for (j = 1; j < FRAMES; j++) {
+                for (j = 1; j < frames; j++) {
                     if (lastUsed[j] > newestTime) {
                         newestTime = lastUsed[j];
                         victimIndex = j;
@@ -705,19 +705,19 @@ void runMRU() {
         totalOccupiedUnits += filled;
 
         // Capture current memory state into history matrix
-        for (j = 0; j < FRAMES; j++) {
+        for (j = 0; j < frames; j++) {
             historyFrame[j][i] = frame[j];
         }
     }
 
     //---Print layout---
     printf("Step:\t\t");
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         printf("%d\t", i + 1);
     }
 
     printf("\nRef Page:\t");
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         printf("%d\t", refString[i]);
     }
 
@@ -727,10 +727,10 @@ void runMRU() {
     }
     printf("\n");
 
-    for (j = 0; j < FRAMES; j++) {
+    for (j = 0; j < frames; j++) {
         printf("Frame %d:\t", j + 1);
 
-        for (i = 0; i < N; i++) {
+        for (i = 0; i < n; i++) {
             if (historyFrame[j][i] == -1) {
                 printf("[ - ]\t");
             }
@@ -748,7 +748,7 @@ void runMRU() {
     printf("\n");
 
     printf("Status:\t\t");
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         printf("%s\t", historyStatus[i]);
     }
 
@@ -786,7 +786,7 @@ void runWSClock() {
 	int oldestIndex;
 	int oldestAge;
 
-	int totalDashes = 15 + (N * 8);
+	int totalDashes = 15 + (n * 8);
 
 	for (i = 0; i < frames; i++) {
 		frame[i] = -1;
@@ -798,7 +798,7 @@ void runWSClock() {
 	printf("\nWSClock Page Replacement\n");
 	printf("TAU = %d, requested page R=1, W operation makes M=1\n\n", TAU);
 
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		page = refString[i];
 		found = 0;
 		time++;
@@ -925,17 +925,17 @@ void runWSClock() {
 
 	//---Print layout---
 	printf("Step:\t\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%d\t", i + 1);
 	}
 
 	printf("\nOperation:\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%c\t", op[i]);
 	}
 
 	printf("\nRef Page:\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%d\t", refString[i]);
 	}
 
@@ -948,7 +948,7 @@ void runWSClock() {
 	for (j = 0; j < frames; j++) {
 		printf("Frame %d:\t", j + 1);
 
-		for (i = 0; i < N; i++) {
+		for (i = 0; i < n; i++) {
 			if (frameStore[j][i] == -1) {
 				printf("[ - ]\t");
 			}
@@ -966,13 +966,13 @@ void runWSClock() {
 	printf("\n");
 
 	printf("Status:\t\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%s\t", statusStore[i]);
 	}
 
 	printf("\n\n---------------------------------- Summary Table ----------------------------------\n");
 	printf("Faults\tHits\tFault Rate\tHit Rate\tMemory Utilization\tWrite Backs\n");
-	printf("%d\t%d\t%.2f%%\t\t%.2f%%\t\t%.2f%%\t\t\t%d\n", faults, hits, ((float)faults / N) * 100, ((float)hits / N) * 100, ((float)totalFilledFrames / (N * frames)) * 100, writeBacks);
+	printf("%d\t%d\t%.2f%%\t\t%.2f%%\t\t%.2f%%\t\t\t%d\n", faults, hits, ((float)faults / n) * 100, ((float)hits / n) * 100, ((float)totalFilledFrames / (n * frames)) * 100, writeBacks);
 	printf("-----------------------------------------------------------------------------------\n");
 
 	printf("\n[P|R|M] means [Page|Reference Bit|Modified Bit]\n");
