@@ -384,14 +384,14 @@ void runSecondChance() {
 	}
 
 	//---print layout---
-	printf("Step:      ");
+	printf("Step:\t\t");
 	for (i = 0; i < N; i++) {
-		printf("%-6d", i + 1);
+		printf("%d\t", i + 1);
 	}
 
-	printf("\nRef Page:  ");
+	printf("\nRef Page:\t");
 	for (i = 0; i < N; i++) {
-		printf("%-6d", refString[i]);
+		printf("%d\t", refString[i]);
 	}
 
 	printf("\n");
