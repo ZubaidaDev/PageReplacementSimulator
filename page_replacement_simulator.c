@@ -186,15 +186,15 @@ void runFIFO() {
 		}
 	}
 
-	//---print layout---
+		//---print layout---
 	printf("Step:\t\t");
 	for (i = 0; i < n; i++) {
-		printf("%-6d", i + 1);
+		printf("%d\t", i + 1);
 	}
 
-	printf("\nRef Page:  ");
+	printf("\nRef Page:\t");
 	for (i = 0; i < n; i++) {
-		printf("%-6d", refString[i]);
+		printf("%d\t", refString[i]);
 	}
 
 	printf("\n");
@@ -208,10 +208,10 @@ void runFIFO() {
 
 		for (i = 0; i < n; i++) {
 			if (frameStore[j][i] == -1) {
-				printf("[ - ] ");
+				printf("[ - ]\t");
 			}
 			else {
-				printf("[ %d ] ", frameStore[j][i]);
+				printf("[ %d ]\t", frameStore[j][i]);
 			}
 		}
 
@@ -225,7 +225,7 @@ void runFIFO() {
 
 	printf("Status:\t\t");
 	for (i = 0; i < n; i++) {
-		printf("%-7s", statusStore[i]);
+		printf("%s\t", statusStore[i]);
 	}
 
 	printSummary(faults, hits, totalFilledFrames);
@@ -378,9 +378,9 @@ void runSecondChance() {
 	int hits = 0;
 	int totalFilledFrames = 0; // counts total filled frame slots needed for memory utilization calc
 
-	int totalDashes = 13 + (N * 8);
+	int totalDashes = 13 + (n * 8);
 
-	for (i = 0; i < FRAMES; i++) {
+	for (i = 0; i < frames; i++) {
 		frame[i] = -1;
 		rBit[i] = 0;
 	}
@@ -388,12 +388,12 @@ void runSecondChance() {
 	printf("\nSecond Chance Page Replacement\n");
 	printf("New page R=0, hit makes R=1\n\n");
 
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		page = refString[i];
 		found = 0;
 
 		// Check hit
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			if (frame[j] == page) {
 				found = 1;
 				rBit[j] = 1;
@@ -409,7 +409,7 @@ void runSecondChance() {
 			statusHistory[i] = "FAULT";
 
 			// If empty frame exists, insert without replacement
-			if (filled < FRAMES) {
+			if (filled < frames) {
 				frame[filled] = page;
 				rBit[filled] = 0;
 				filled++;
@@ -418,19 +418,19 @@ void runSecondChance() {
 				// Second Chance replacement
 				while (rBit[pointer] == 1) {
 					rBit[pointer] = 0;
-					pointer = (pointer + 1) % FRAMES;
+					pointer = (pointer + 1) % frames;
 				}
 
 				frame[pointer] = page;
 				rBit[pointer] = 0;
 
-				pointer = (pointer + 1) % FRAMES;
+				pointer = (pointer + 1) % frames;
 			}
 		}
 
 		totalFilledFrames += filled;
 		// store current state values into history matrix to print later
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			frameStore[j][i] = frame[j];
 			rBitStore[j][i] = rBit[j];
 		}
@@ -438,12 +438,12 @@ void runSecondChance() {
 
 	//---print layout---
 	printf("Step:\t\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%d\t", i + 1);
 	}
 
 	printf("\nRef Page:\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%d\t", refString[i]);
 	}
 
@@ -453,10 +453,10 @@ void runSecondChance() {
 	}
 	printf("\n");
 
-	for (j = 0; j < FRAMES; j++) {
+	for (j = 0; j < frames; j++) {
 		printf("Frame %d:\t", j + 1);
 
-		for (i = 0; i < N; i++) {
+		for (i = 0; i < n; i++) {
 			if (frameStore[j][i] == -1) {
 				printf("[ - ]\t");
 			}
@@ -474,14 +474,13 @@ void runSecondChance() {
 	printf("\n");
 
 	printf("Status:\t\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%s\t", statusHistory[i]);
 	}
 
 	printSummary(faults, hits, totalFilledFrames);
 	printf("\n[P|R] means [Page|Reference Bit]\n");
 }
-
 /* -------------------- LFU with Dynamic Aging (Least Frequently Used with Dynamic Aging) Algorithm -------------------- */
 
 void runLFUAging() {
@@ -606,7 +605,7 @@ void runLFUAging() {
 				printf("[ - ]\t");
 			}
 			else {
-				printf("[%d|%d] ", frameStore[j][i], freqStore[j][i]);
+				printf("[%d|%d]\t", frameStore[j][i], freqStore[j][i]);
 			}
 		}
 
