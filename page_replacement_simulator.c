@@ -5,11 +5,15 @@ and how page faults occur.*/
 
 #include <stdio.h>
 
-#define FRAMES 3 // no. of available page frames
-#define N 18 // no. of page ref
+#define MAX_FRAMES 10
+#define MAX_N 50
 #define TAU 4 // aging time/working set age threshold for wsclock
 
-int refString[N] = {1, 2, 3, 1, 2, 1, 4, 1, 2, 5, 1, 2, 3, 4, 5, 1, 2, 1};
+int frames = 3; // no. of available page frames, default value
+int n = 18;// no. of page ref
+
+int refString[MAX_N] = {0, 4, 1, 4, 2, 4, 3, 4, 2, 4, 0, 4, 1, 4, 2, 2, 3, 1};
+char op[MAX_N] = {'R', 'W', 'R', 'R', 'W', 'R', 'R', 'W', 'R', 'R', 'W', 'R', 'R', 'W', 'R', 'R', 'W', 'R'}; // R = read, W = write
 
 void runFIFO();
 void runLRU();
@@ -18,9 +22,11 @@ void runLFUAging();
 void runMRU();
 void runWSClock();
 void printSummary(int faults, int hits, int totalFilledFrames);
+void userInputData();
 
 int main() {
 	int choice;
+	userInputData();
 
 	do {
 		printf("\n------------------------------------------\n");
@@ -69,12 +75,59 @@ int main() {
 	return 0;
 }
 
+void userInputData() {
+	int choice;
+	int enterOp;
+	int i;
+
+	printf("Use custom input? Enter 1 for Yes, 0 for Default: ");
+	scanf("%d", &choice);
+
+	if (choice == 1) {
+		printf("Enter number of frames: ");
+		scanf("%d", &frames);
+
+		printf("Enter number of page references: ");
+		scanf("%d", &n);
+
+		if (frames > MAX_FRAMES || n > MAX_N) {
+			printf("Input too large. Using default values.\n");
+			frames = 3;
+			n = 18;
+			return;
+		}
+
+		printf("Enter reference string:\n");
+		for (i = 0; i < n; i++) {
+			printf("Page %d: ", i + 1);
+			scanf("%d", &refString[i]);
+		}
+
+		printf("Do you want to enter operations for WSClock? Enter 1 for Yes, 0 for No: ");
+		scanf("%d", &enterOp);
+
+		if (enterOp == 1) {
+			for (i = 0; i < n; i++) {
+				printf("Operation for page %d (R/W): ", refString[i]);
+				scanf(" %c", &op[i]);
+			}
+		}
+		else {
+			for (i = 0; i < n; i++) {
+				op[i] = 'R';
+			}
+			printf("Operations not entered. All operations assumed as Read (R).\n");
+
+		}
+	}
+}
+
 /* -------------------- FIFO (First In, First Out) Algorithm -------------------- */
 
 void runFIFO() {
-	int frame[FRAMES];
-	int frameStore[FRAMES][N];
-	char* statusStore[N];
+	int frame[MAX_FRAMES];
+	int frameStore[MAX_FRAMES][MAX_N];
+	char* statusStore[MAX_N];
 
 	int i, j;
 	int page;
@@ -85,21 +138,21 @@ void runFIFO() {
 	int hits = 0;
 	int totalFilledFrames = 0;
 
-	int totalDashes = 13 + (N * 8);
+	int totalDashes = 13 + (n * 8);
 
-	for (i = 0; i < FRAMES; i++) {
+	for (i = 0; i < frames; i++) {
 		frame[i] = -1;
 	}
 
 	printf("\nFIFO Page Replacement\n");
 	printf("Oldest page is replaced first.\n\n");
 
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		page = refString[i];
 		found = 0;
 
 		// Check hit
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			if (frame[j] == page) {
 				found = 1;
 				hits++;
@@ -114,34 +167,34 @@ void runFIFO() {
 			statusStore[i] = "FAULT";
 
 			// If empty frame exists, insert without replacement
-			if (filled < FRAMES) {
+			if (filled < frames) {
 				frame[filled] = page;
 				filled++;
 			}
 			else {
 				// FIFO replacement
 				frame[pointer] = page;
-				pointer = (pointer + 1) % FRAMES;
+				pointer = (pointer + 1) % frames;
 			}
 		}
 
 		totalFilledFrames += filled;
 
 		// store current state values into history matrix to print later
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			frameStore[j][i] = frame[j];
 		}
 	}
 
-	//---print layout---
-	printf("Step:      ");
-	for (i = 0; i < N; i++) {
-		printf("%-6d", i + 1);
+		//---print layout---
+	printf("Step:\t\t");
+	for (i = 0; i < n; i++) {
+		printf("%d\t", i + 1);
 	}
 
-	printf("\nRef Page:  ");
-	for (i = 0; i < N; i++) {
-		printf("%-6d", refString[i]);
+	printf("\nRef Page:\t");
+	for (i = 0; i < n; i++) {
+		printf("%d\t", refString[i]);
 	}
 
 	printf("\n");
@@ -150,15 +203,15 @@ void runFIFO() {
 	}
 	printf("\n");
 
-	for (j = 0; j < FRAMES; j++) {
+	for (j = 0; j < frames; j++) {
 		printf("Frame %d:\t", j + 1);
 
-		for (i = 0; i < N; i++) {
+		for (i = 0; i < n; i++) {
 			if (frameStore[j][i] == -1) {
-				printf("[ - ] ");
+				printf("[ - ]\t");
 			}
 			else {
-				printf("[ %d ] ", frameStore[j][i]);
+				printf("[ %d ]\t", frameStore[j][i]);
 			}
 		}
 
@@ -171,8 +224,8 @@ void runFIFO() {
 	printf("\n");
 
 	printf("Status:\t\t");
-	for (i = 0; i < N; i++) {
-		printf("%-7s", statusStore[i]);
+	for (i = 0; i < n; i++) {
+		printf("%s\t", statusStore[i]);
 	}
 
 	printSummary(faults, hits, totalFilledFrames);
@@ -181,11 +234,11 @@ void runFIFO() {
 /* -------------------- LRU (Least Recently Used) Algorithm -------------------- */
 
 void runLRU() {
-    int frame[FRAMES];
-    int lastUsed[FRAMES];
+    int frame[MAX_FRAMES];
+    int lastUsed[MAX_FRAMES];
 
-    int historyFrame[FRAMES][N];
-    char* historyStatus[N];
+    int historyFrame[MAX_FRAMES][MAX_N];
+    char* historyStatus[MAX_N];
 
     int i, j;
     int page;
@@ -199,9 +252,9 @@ void runLRU() {
     int victimIndex;
     int oldestTime;
 
-    int totalDashes = 13 + (N * 8);
+    int totalDashes = 13 + (n * 8);
 
-    for (i = 0; i < FRAMES; i++) {
+    for (i = 0; i < frames; i++) {
         frame[i] = -1;
         lastUsed[i] = 0;
     }
@@ -209,13 +262,13 @@ void runLRU() {
     printf("\nLRU Page Replacement\n");
     printf("Page that was least recently used is replaced.\n\n");
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         page = refString[i];
         found = 0;
         time++;
 
         // Check if requested page is already in memory
-        for (j = 0; j < FRAMES; j++) {
+        for (j = 0; j < frames; j++) {
             if (frame[j] == page) {
                 found = 1;
                 lastUsed[j] = time;
@@ -231,7 +284,7 @@ void runLRU() {
             historyStatus[i] = "FAULT";
 
             // If empty frame exists, insert page directly
-            if (filled < FRAMES) {
+            if (filled < frames) {
                 frame[filled] = page;
                 lastUsed[filled] = time;
                 filled++;
@@ -241,7 +294,7 @@ void runLRU() {
                 victimIndex = 0;
                 oldestTime = lastUsed[0];
 
-                for (j = 1; j < FRAMES; j++) {
+                for (j = 1; j < frames; j++) {
                     if (lastUsed[j] < oldestTime) {
                         oldestTime = lastUsed[j];
                         victimIndex = j;
@@ -256,19 +309,19 @@ void runLRU() {
         totalOccupiedUnits += filled;
 
         // Capture current memory state into history matrix
-        for (j = 0; j < FRAMES; j++) {
+        for (j = 0; j < frames; j++) {
             historyFrame[j][i] = frame[j];
         }
     }
 
     //---Print layout---
     printf("Step:\t\t");
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         printf("%d\t", i + 1);
     }
 
     printf("\nRef Page:\t");
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         printf("%d\t", refString[i]);
     }
 
@@ -278,10 +331,10 @@ void runLRU() {
     }
     printf("\n");
 
-    for (j = 0; j < FRAMES; j++) {
+    for (j = 0; j < frames; j++) {
         printf("Frame %d:\t", j + 1);
 
-        for (i = 0; i < N; i++) {
+        for (i = 0; i < n; i++) {
             if (historyFrame[j][i] == -1) {
                 printf("[ - ]\t");
             }
@@ -299,7 +352,7 @@ void runLRU() {
     printf("\n");
 
     printf("Status:\t\t");
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         printf("%s\t", historyStatus[i]);
     }
 
@@ -309,12 +362,12 @@ void runLRU() {
 /* -------------------- Second Chance (Clock) Algorithm -------------------- */
 
 void runSecondChance() {
-	int frame[FRAMES];
-	int rBit[FRAMES];
+	int frame[MAX_FRAMES];
+	int rBit[MAX_FRAMES];
 
-	int frameStore[FRAMES][N];
-	int rBitStore[FRAMES][N];
-	char* statusHistory[N];
+	int frameStore[MAX_FRAMES][MAX_N];
+	int rBitStore[MAX_FRAMES][MAX_N];
+	char* statusHistory[MAX_N];
 
 	int i, j;
 	int page;
@@ -325,9 +378,9 @@ void runSecondChance() {
 	int hits = 0;
 	int totalFilledFrames = 0; // counts total filled frame slots needed for memory utilization calc
 
-	int totalDashes = 13 + (N * 8);
+	int totalDashes = 13 + (n * 8);
 
-	for (i = 0; i < FRAMES; i++) {
+	for (i = 0; i < frames; i++) {
 		frame[i] = -1;
 		rBit[i] = 0;
 	}
@@ -335,12 +388,12 @@ void runSecondChance() {
 	printf("\nSecond Chance Page Replacement\n");
 	printf("New page R=0, hit makes R=1\n\n");
 
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		page = refString[i];
 		found = 0;
 
 		// Check hit
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			if (frame[j] == page) {
 				found = 1;
 				rBit[j] = 1;
@@ -356,7 +409,7 @@ void runSecondChance() {
 			statusHistory[i] = "FAULT";
 
 			// If empty frame exists, insert without replacement
-			if (filled < FRAMES) {
+			if (filled < frames) {
 				frame[filled] = page;
 				rBit[filled] = 0;
 				filled++;
@@ -365,33 +418,33 @@ void runSecondChance() {
 				// Second Chance replacement
 				while (rBit[pointer] == 1) {
 					rBit[pointer] = 0;
-					pointer = (pointer + 1) % FRAMES;
+					pointer = (pointer + 1) % frames;
 				}
 
 				frame[pointer] = page;
 				rBit[pointer] = 0;
 
-				pointer = (pointer + 1) % FRAMES;
+				pointer = (pointer + 1) % frames;
 			}
 		}
 
 		totalFilledFrames += filled;
 		// store current state values into history matrix to print later
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			frameStore[j][i] = frame[j];
 			rBitStore[j][i] = rBit[j];
 		}
 	}
 
 	//---print layout---
-	printf("Step:      ");
-	for (i = 0; i < N; i++) {
-		printf("%-6d", i + 1);
+	printf("Step:\t\t");
+	for (i = 0; i < n; i++) {
+		printf("%d\t", i + 1);
 	}
 
-	printf("\nRef Page:  ");
-	for (i = 0; i < N; i++) {
-		printf("%-6d", refString[i]);
+	printf("\nRef Page:\t");
+	for (i = 0; i < n; i++) {
+		printf("%d\t", refString[i]);
 	}
 
 	printf("\n");
@@ -400,10 +453,10 @@ void runSecondChance() {
 	}
 	printf("\n");
 
-	for (j = 0; j < FRAMES; j++) {
+	for (j = 0; j < frames; j++) {
 		printf("Frame %d:\t", j + 1);
 
-		for (i = 0; i < N; i++) {
+		for (i = 0; i < n; i++) {
 			if (frameStore[j][i] == -1) {
 				printf("[ - ]\t");
 			}
@@ -421,24 +474,23 @@ void runSecondChance() {
 	printf("\n");
 
 	printf("Status:\t\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%s\t", statusHistory[i]);
 	}
 
 	printSummary(faults, hits, totalFilledFrames);
 	printf("\n[P|R] means [Page|Reference Bit]\n");
 }
-
 /* -------------------- LFU with Dynamic Aging (Least Frequently Used with Dynamic Aging) Algorithm -------------------- */
 
 void runLFUAging() {
-	int frame[FRAMES];
-	int freq[FRAMES];
-	int age[FRAMES];
+	int frame[MAX_FRAMES];
+	int freq[MAX_FRAMES];
+	int age[MAX_FRAMES];
 
-	int frameStore[FRAMES][N];
-	int freqStore[FRAMES][N];
-	char* statusStore[N];
+	int frameStore[MAX_FRAMES][MAX_N];
+	int freqStore[MAX_FRAMES][MAX_N];
+	char* statusStore[MAX_N];
 
 	int i, j;
 	int page;
@@ -452,9 +504,9 @@ void runLFUAging() {
 	int minScore;
 	int score;
 
-	int totalDashes = 13 + (N * 8);
+	int totalDashes = 13 + (n * 8);
 
-	for (i = 0; i < FRAMES; i++) {
+	for (i = 0; i < frames; i++) {
 		frame[i] = -1;
 		freq[i] = 0;
 		age[i] = 0;
@@ -463,12 +515,12 @@ void runLFUAging() {
 	printf("\nLFU with Dynamic Aging Page Replacement\n");
 	printf("Page with lowest frequency score is replaced.\n\n");
 
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		page = refString[i];
 		found = 0;
 
 		// Check hit
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			if (frame[j] == page) {
 				found = 1;
 				freq[j]++;
@@ -484,7 +536,7 @@ void runLFUAging() {
 			statusStore[i] = "FAULT";
 
 			// If empty frame exists, insert without replacement
-			if (filled < FRAMES) {
+			if (filled < frames) {
 				frame[filled] = page;
 				freq[filled] = 1;
 				age[filled] = i;
@@ -495,7 +547,7 @@ void runLFUAging() {
 				victim = 0;
 				minScore = freq[0] + age[0];
 
-				for (j = 1; j < FRAMES; j++) {
+				for (j = 1; j < frames; j++) {
 					score = freq[j] + age[j];
 
 					if (score < minScore) {
@@ -522,7 +574,7 @@ void runLFUAging() {
 		totalFilledFrames += filled;
 
 		// store current state values into history matrix to print later
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			frameStore[j][i] = frame[j];
 			freqStore[j][i] = freq[j];
 		}
@@ -530,12 +582,12 @@ void runLFUAging() {
 
 	//---print layout---
 	printf("Step:\t\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%d\t", i + 1);
 	}
 
 	printf("\nRef Page:\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%d\t", refString[i]);
 	}
 
@@ -545,15 +597,15 @@ void runLFUAging() {
 	}
 	printf("\n");
 
-	for (j = 0; j < FRAMES; j++) {
+	for (j = 0; j < frames; j++) {
 		printf("Frame %d:\t", j + 1);
 
-		for (i = 0; i < N; i++) {
+		for (i = 0; i < n; i++) {
 			if (frameStore[j][i] == -1) {
 				printf("[ - ]\t");
 			}
 			else {
-				printf("[%d|%d] ", frameStore[j][i], freqStore[j][i]);
+				printf("[%d|%d]\t", frameStore[j][i], freqStore[j][i]);
 			}
 		}
 
@@ -566,7 +618,7 @@ void runLFUAging() {
 	printf("\n");
 
 	printf("Status:\t\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%s\t", statusStore[i]);
 	}
 
@@ -577,11 +629,11 @@ void runLFUAging() {
 /* -------------------- MRU (Most Recently Used) Algorithm -------------------- */
 
 void runMRU() {
-    int frame[FRAMES];
-    int lastUsed[FRAMES];
+    int frame[MAX_FRAMES];
+    int lastUsed[MAX_FRAMES];
 
-    int historyFrame[FRAMES][N];
-    char* historyStatus[N];
+    int historyFrame[MAX_FRAMES][MAX_N];
+    char* historyStatus[MAX_N];
 
     int i, j;
     int page;
@@ -595,9 +647,9 @@ void runMRU() {
     int victimIndex;
     int newestTime;
 
-    int totalDashes = 13 + (N * 8);
+    int totalDashes = 13 + (n * 8);
 
-    for (i = 0; i < FRAMES; i++) {
+    for (i = 0; i < frames; i++) {
         frame[i] = -1;
         lastUsed[i] = 0;
     }
@@ -605,13 +657,13 @@ void runMRU() {
     printf("\nMRU Page Replacement\n");
     printf("Page that was most recently used is replaced.\n\n");
 
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         page = refString[i];
         found = 0;
         time++;
 
         // Check if requested page is already in memory
-        for (j = 0; j < FRAMES; j++) {
+        for (j = 0; j < frames; j++) {
             if (frame[j] == page) {
                 found = 1;
                 lastUsed[j] = time;
@@ -627,7 +679,7 @@ void runMRU() {
             historyStatus[i] = "FAULT";
 
             // If empty frame exists, insert page directly
-            if (filled < FRAMES) {
+            if (filled < frames) {
                 frame[filled] = page;
                 lastUsed[filled] = time;
                 filled++;
@@ -637,7 +689,7 @@ void runMRU() {
                 victimIndex = 0;
                 newestTime = lastUsed[0];
 
-                for (j = 1; j < FRAMES; j++) {
+                for (j = 1; j < frames; j++) {
                     if (lastUsed[j] > newestTime) {
                         newestTime = lastUsed[j];
                         victimIndex = j;
@@ -652,19 +704,19 @@ void runMRU() {
         totalOccupiedUnits += filled;
 
         // Capture current memory state into history matrix
-        for (j = 0; j < FRAMES; j++) {
+        for (j = 0; j < frames; j++) {
             historyFrame[j][i] = frame[j];
         }
     }
 
     //---Print layout---
     printf("Step:\t\t");
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         printf("%d\t", i + 1);
     }
 
     printf("\nRef Page:\t");
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         printf("%d\t", refString[i]);
     }
 
@@ -674,10 +726,10 @@ void runMRU() {
     }
     printf("\n");
 
-    for (j = 0; j < FRAMES; j++) {
+    for (j = 0; j < frames; j++) {
         printf("Frame %d:\t", j + 1);
 
-        for (i = 0; i < N; i++) {
+        for (i = 0; i < n; i++) {
             if (historyFrame[j][i] == -1) {
                 printf("[ - ]\t");
             }
@@ -695,7 +747,7 @@ void runMRU() {
     printf("\n");
 
     printf("Status:\t\t");
-    for (i = 0; i < N; i++) {
+    for (i = 0; i < n; i++) {
         printf("%s\t", historyStatus[i]);
     }
 
@@ -705,18 +757,16 @@ void runMRU() {
 /* -------------------- WSCLOCK (Working Set Clock) Algorithm-------------------- */
 
 void runWSClock() {
-	// R = read, W = write
-	char op[N] = {'R', 'W', 'R', 'R', 'W', 'R', 'R', 'W', 'R', 'R', 'W', 'R', 'R', 'W', 'R', 'R', 'W', 'R'};
 
-	int frame[FRAMES];
-	int rBit[FRAMES];
-	int mBit[FRAMES];
-	int lastUsed[FRAMES];
+	int frame[MAX_FRAMES];
+	int rBit[MAX_FRAMES];
+	int mBit[MAX_FRAMES];
+	int lastUsed[MAX_FRAMES];
 
-	int frameStore[FRAMES][N];
-	int rBitStore[FRAMES][N];
-	int mBitStore[FRAMES][N];
-	char* statusStore[N];
+	int frameStore[MAX_FRAMES][MAX_N];
+	int rBitStore[MAX_FRAMES][MAX_N];
+	int mBitStore[MAX_FRAMES][MAX_N];
+	char* statusStore[MAX_N];
 
 	int i, j;
 	int page;
@@ -735,9 +785,9 @@ void runWSClock() {
 	int oldestIndex;
 	int oldestAge;
 
-	int totalDashes = 15 + (N * 8);
+	int totalDashes = 15 + (n * 8);
 
-	for (i = 0; i < FRAMES; i++) {
+	for (i = 0; i < frames; i++) {
 		frame[i] = -1;
 		rBit[i] = 0;
 		mBit[i] = 0;
@@ -747,13 +797,13 @@ void runWSClock() {
 	printf("\nWSClock Page Replacement\n");
 	printf("TAU = %d, requested page R=1, W operation makes M=1\n\n", TAU);
 
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		page = refString[i];
 		found = 0;
 		time++;
 
 		// Check hit
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			if (frame[j] == page) {
 				found = 1;
 				rBit[j] = 1;
@@ -775,7 +825,7 @@ void runWSClock() {
 			statusStore[i] = "FAULT";
 
 			// If empty frame exists, insert without replacement
-			if (filled < FRAMES) {
+			if (filled < frames) {
 				frame[filled] = page;
 				rBit[filled] = 1;
 
@@ -796,7 +846,7 @@ void runWSClock() {
 				oldestIndex = pointer;
 				oldestAge = -1;
 
-				while (replaced == 0 && scanned < FRAMES * 2) {
+				while (replaced == 0 && scanned < frames * 2) {
 					age = time - lastUsed[pointer];
 
 					if (age > oldestAge) {
@@ -806,17 +856,17 @@ void runWSClock() {
 
 					if (rBit[pointer] == 1) { //if ref bit == 1, give second chance
 						rBit[pointer] = 0;
-						pointer = (pointer + 1) % FRAMES;
+						pointer = (pointer + 1) % frames;
 					}
 					else { //else if R-bit == 0, check age/working set condition
 						if (age <= TAU) { //if page in working set, give second chance
-							pointer = (pointer + 1) % FRAMES;
+							pointer = (pointer + 1) % frames;
 						}
 						else {//else if page not in working set (age>TAU), check dirty/modified bit
 							if (mBit[pointer] == 1) { //if dirty (M-bit == 1), write back, give second chance
 								mBit[pointer] = 0;
 								writeBacks++;
-								pointer = (pointer + 1) % FRAMES;
+								pointer = (pointer + 1) % frames;
 							}
 							else { //else if clean (M-bit == 0), replace
 								frame[pointer] = page;
@@ -830,7 +880,7 @@ void runWSClock() {
 								}
 
 								lastUsed[pointer] = time; //update last used time for new page
-								pointer = (pointer + 1) % FRAMES;
+								pointer = (pointer + 1) % frames;
 								replaced = 1;//replacement done, exit loop
 							}
 						}
@@ -858,14 +908,14 @@ void runWSClock() {
 					}
 
 					lastUsed[pointer] = time;
-					pointer = (pointer + 1) % FRAMES;
+					pointer = (pointer + 1) % frames;
 				}
 			}
 		}
 		totalFilledFrames += filled;
 
 		// Capture current state values into the history matrix
-		for (j = 0; j < FRAMES; j++) {
+		for (j = 0; j < frames; j++) {
 			frameStore[j][i] = frame[j];
 			rBitStore[j][i] = rBit[j];
 			mBitStore[j][i] = mBit[j];
@@ -874,17 +924,17 @@ void runWSClock() {
 
 	//---Print layout---
 	printf("Step:\t\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%d\t", i + 1);
 	}
 
 	printf("\nOperation:\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%c\t", op[i]);
 	}
 
 	printf("\nRef Page:\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%d\t", refString[i]);
 	}
 
@@ -894,10 +944,10 @@ void runWSClock() {
 	}
 	printf("\n");
 
-	for (j = 0; j < FRAMES; j++) {
+	for (j = 0; j < frames; j++) {
 		printf("Frame %d:\t", j + 1);
 
-		for (i = 0; i < N; i++) {
+		for (i = 0; i < n; i++) {
 			if (frameStore[j][i] == -1) {
 				printf("[ - ]\t");
 			}
@@ -915,13 +965,13 @@ void runWSClock() {
 	printf("\n");
 
 	printf("Status:\t\t");
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < n; i++) {
 		printf("%s\t", statusStore[i]);
 	}
 
 	printf("\n\n---------------------------------- Summary Table ----------------------------------\n");
 	printf("Faults\tHits\tFault Rate\tHit Rate\tMemory Utilization\tWrite Backs\n");
-	printf("%d\t%d\t%.2f%%\t\t%.2f%%\t\t%.2f%%\t\t\t%d\n", faults, hits, ((float)faults / N) * 100, ((float)hits / N) * 100, ((float)totalFilledFrames / (N * FRAMES)) * 100, writeBacks);
+	printf("%d\t%d\t%.2f%%\t\t%.2f%%\t\t%.2f%%\t\t\t%d\n", faults, hits, ((float)faults / n) * 100, ((float)hits / n) * 100, ((float)totalFilledFrames / (n * frames)) * 100, writeBacks);
 	printf("-----------------------------------------------------------------------------------\n");
 
 	printf("\n[P|R|M] means [Page|Reference Bit|Modified Bit]\n");
@@ -933,8 +983,8 @@ void printSummary(int faults, int hits, int totalFilledFrames) {
     printf("\n\n------------------------- Summary Table --------------------------\n");
     printf("Faults\tHits\tFault Rate\tHit Rate\tMemory Utilization\n");
     printf("%d\t%d\t%.2f%%\t\t%.2f%%\t\t%.2f%%\n",
-           faults, hits, ((float)faults / N) * 100,
-           ((float)hits / N) * 100,
-           ((float)totalFilledFrames / (N * FRAMES)) * 100);
+           faults, hits, ((float)faults / n) * 100,
+           ((float)hits / n) * 100,
+           ((float)totalFilledFrames / (n * frames)) * 100);
     printf("------------------------------------------------------------------\n");
 }
