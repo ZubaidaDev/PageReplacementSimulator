@@ -1042,6 +1042,12 @@ public class PageReplacementSimulator {
         p.add(sectionLabel("REFERENCE STRING"));
         p.add(Box.createVerticalStrut(8));
         p.add(refLabel());
+        
+        p.add(Box.createVerticalStrut(18));
+        p.add(sectionLabel("WSCLOCK OPERATIONS"));
+        p.add(Box.createVerticalStrut(8));
+        p.add(opLabel());
+        
         p.add(Box.createVerticalGlue());
 
         return p;
@@ -1103,7 +1109,7 @@ public class PageReplacementSimulator {
         return cfg;
     }
 
-    static JLabel refLabel() {
+    static JLabel refLabel() { //display ref string, which contains pg request sequence used in simulation
         StringBuilder sb = new StringBuilder("<html><span style='color:#5a6478;font-family:monospace;font-size:10px;'>");
 
         for (int i = 0; i < n; i++) {
@@ -1123,6 +1129,31 @@ public class PageReplacementSimulator {
         JLabel l = new JLabel(sb.toString());
         l.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0));
         l.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return l;
+    }
+    
+    static JLabel opLabel() { // display R/W operation sequence used by WSClock algo in simulation
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < n && i < op.length; i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+
+            if (i > 0 && i % 8 == 0) {
+                sb.append("<br>");
+            }
+
+            sb.append(op[i]);
+        }
+
+        JLabel l = new JLabel("<html><span style='color:#5f6f8f;font-family:monospace;font-size:10px;'>"
+                + sb.toString()
+                + "</span></html>");
+
+        l.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0));
+        l.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         return l;
     }
 
