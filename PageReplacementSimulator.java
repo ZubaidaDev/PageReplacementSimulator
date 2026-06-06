@@ -529,10 +529,7 @@ public class PageReplacementSimulator {
         int faults = 0;
         int hits = 0;
         int totalFilledFrames = 0;
-
         int victim;
-        int minScore;
-        int score;
 
         for (int i = 0; i < frames; i++) {
             frame[i] = -1;
@@ -549,6 +546,7 @@ public class PageReplacementSimulator {
                 if (frame[j] == page) {
                     found = 1;
                     freq[j]++;
+                    age[j] = i;
                     hits++;
                     statusStore[i] = "HIT";
                     break;
@@ -560,22 +558,18 @@ public class PageReplacementSimulator {
                 faults++;
                 statusStore[i] = "FAULT";
 
-                // If empty frame exists, insert without replacement
                 if (filled < frames) {
                     frame[filled] = page;
                     freq[filled] = 1;
                     age[filled] = i;
                     filled++;
                 } else {
-                    // LFU with Dynamic Aging replacement
                     victim = 0;
-                    minScore = freq[0] + age[0];
 
                     for (int j = 1; j < frames; j++) {
-                        score = freq[j] + age[j];
-
-                        if (score < minScore) {
-                            minScore = score;
+                        if (freq[j] < freq[victim]) {
+                            victim = j;
+                        } else if (freq[j] == freq[victim] && age[j] < age[victim]) {
                             victim = j;
                         }
                     }
@@ -597,7 +591,6 @@ public class PageReplacementSimulator {
 
             totalFilledFrames += filled;
 
-            // store current state values into history matrix to print later
             for (int j = 0; j < frames; j++) {
                 frameStore[j][i] = frame[j];
                 freqStore[j][i] = freq[j];
@@ -607,7 +600,7 @@ public class PageReplacementSimulator {
         SimResult r = new SimResult();
         r.title = "LFU with Dynamic Aging";
         r.subtitle = "Least Frequently Used with Dynamic Aging";
-        r.desc = "Page with lowest frequency score is replaced.";
+        r.desc = "Page with lowest frequency count is replaced. If frequencies are equal, the older page is replaced.";
         r.note = "[P|F] means [Page|Frequency]";
         r.hFrame = frameStore;
         r.hFreq = freqStore;
@@ -618,7 +611,6 @@ public class PageReplacementSimulator {
         r.writeBacks = -1;
         return r;
     }
-
     /* ------------------------------------ MRU (Most Recently Used) Algorithm -------------------------------------------- */
 
     static SimResult runMRU() {
