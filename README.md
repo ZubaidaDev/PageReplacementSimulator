@@ -1,7 +1,8 @@
 # Page Replacement Simulator
 
-A simple C program that simulates virtual memory page replacement algorithms.  
-The project helps users understand how pages are loaded into memory frames and how page faults and hits occur.
+A virtual memory page replacement simulator that demonstrates how pages are loaded into memory frames and how page faults and hits occur.
+
+The project includes both a C console version and a Java Swing GUI version.
 
 ## Features
 
@@ -12,7 +13,12 @@ The project helps users understand how pages are loaded into memory frames and h
 - MRU
 - WSClock
 
-## How to Run
+## Files
+
+- `page_replacement_simulator.c` - C console version
+- `PageReplacementSimulator.java` - Java Swing GUI version
+
+## How to Run the C Version
 
 Compile the program:
 
