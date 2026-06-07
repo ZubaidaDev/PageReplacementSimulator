@@ -434,7 +434,7 @@ public class PageReplacementSimulator {
 
         int[][] frameStore = new int[MAX_FRAMES][MAX_N];
         int[][] rBitStore = new int[MAX_FRAMES][MAX_N];
-        String[] statusHistory = new String[MAX_N];
+        String[] statusStore = new String[MAX_N];
 
         int page;
         int found;
@@ -459,7 +459,7 @@ public class PageReplacementSimulator {
                     found = 1;
                     rBit[j] = 1;
                     hits++;
-                    statusHistory[i] = "HIT";
+                    statusStore[i] = "HIT";
                     break;
                 }
             }
@@ -467,8 +467,8 @@ public class PageReplacementSimulator {
             // Page fault
             if (found == 0) {
                 faults++;
-                statusHistory[i] = "FAULT";
-
+                statusStore[i] = "FAULT";
+                
                 // If empty frame exists, insert without replacement
                 if (filled < frames) {
                     frame[filled] = page;
@@ -504,7 +504,7 @@ public class PageReplacementSimulator {
         r.note = "[P|R] means [Page|Reference Bit]";
         r.hFrame = frameStore;
         r.hRef = rBitStore;
-        r.hStatus = statusHistory;
+        r.hStatus = statusStore;
         r.faults = faults;
         r.hits = hits;
         r.totalFilledFrames = totalFilledFrames;
