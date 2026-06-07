@@ -3,9 +3,10 @@
 This program simulates various page replacement algorithms where users can visualize how pages are loaded into memory frames
 and how page faults occur.
 
-Java version:
-- Same concepts and logic as C version
-- GUI added using Java Swing
+Student Names:
+-
+-
+-
 */
 
 import java.awt.*;
@@ -340,91 +341,91 @@ public class PageReplacementSimulator {
     /* ------------------------------------- LRU (Least Recently Used) Algorithm ----------------------------------------- */
 
     static SimResult runLRU() {
-        int[] frame = new int[MAX_FRAMES];
-        int[] lastUsed = new int[MAX_FRAMES];
+    int[] frame = new int[MAX_FRAMES];
+    int[] lastUsed = new int[MAX_FRAMES];
 
-        int[][] historyFrame = new int[MAX_FRAMES][MAX_N];
-        String[] historyStatus = new String[MAX_N];
+    int[][] frameStore = new int[MAX_FRAMES][MAX_N];
+    String[] statusStore = new String[MAX_N];
 
-        int page;
-        int found;
-        int time = 0;
-        int filled = 0;
-        int faults = 0;
-        int hits = 0;
-        int totalOccupiedUnits = 0;
+    int page;
+    int found;
+    int time = 0;
+    int filled = 0;
+    int faults = 0;
+    int hits = 0;
+    int totalOccupiedUnits = 0;
 
-        int victimIndex;
-        int oldestTime;
+    int victimIndex;
+    int oldestTime;
 
-        for (int i = 0; i < frames; i++) {
-            frame[i] = -1;
-            lastUsed[i] = 0;
-        }
-
-        for (int i = 0; i < n; i++) {
-            page = refString[i];
-            found = 0;
-            time++;
-
-            // Check if requested page is already in memory
-            for (int j = 0; j < frames; j++) {
-                if (frame[j] == page) {
-                    found = 1;
-                    lastUsed[j] = time;
-                    hits++;
-                    historyStatus[i] = "HIT";
-                    break;
-                }
-            }
-
-            // Page fault
-            if (found == 0) {
-                faults++;
-                historyStatus[i] = "FAULT";
-
-                // If empty frame exists, insert page directly
-                if (filled < frames) {
-                    frame[filled] = page;
-                    lastUsed[filled] = time;
-                    filled++;
-                } else {
-                    // Find the least recently used page
-                    victimIndex = 0;
-                    oldestTime = lastUsed[0];
-
-                    for (int j = 1; j < frames; j++) {
-                        if (lastUsed[j] < oldestTime) {
-                            oldestTime = lastUsed[j];
-                            victimIndex = j;
-                        }
-                    }
-
-                    frame[victimIndex] = page;
-                    lastUsed[victimIndex] = time;
-                }
-            }
-
-            totalOccupiedUnits += filled;
-
-            // Capture current memory state into history matrix
-            for (int j = 0; j < frames; j++) {
-                historyFrame[j][i] = frame[j];
-            }
-        }
-
-        SimResult r = new SimResult();
-        r.title = "LRU";
-        r.subtitle = "Least Recently Used";
-        r.desc = "Page that was least recently used is replaced.";
-        r.hFrame = historyFrame;
-        r.hStatus = historyStatus;
-        r.faults = faults;
-        r.hits = hits;
-        r.totalFilledFrames = totalOccupiedUnits;
-        r.writeBacks = -1;
-        return r;
+    for (int i = 0; i < frames; i++) {
+        frame[i] = -1;
+        lastUsed[i] = 0;
     }
+
+    for (int i = 0; i < n; i++) {
+        page = refString[i];
+        found = 0;
+        time++;
+
+        // Check if requested page is already in memory
+        for (int j = 0; j < frames; j++) {
+            if (frame[j] == page) {
+                found = 1;
+                lastUsed[j] = time;
+                hits++;
+                statusStore[i] = "HIT";
+                break;
+            }
+        }
+
+        // Page fault
+        if (found == 0) {
+            faults++;
+            statusStore[i] = "FAULT";
+
+            // If empty frame exists, insert page directly
+            if (filled < frames) {
+                frame[filled] = page;
+                lastUsed[filled] = time;
+                filled++;
+            } else {
+                // Find the least recently used page
+                victimIndex = 0;
+                oldestTime = lastUsed[0];
+
+                for (int j = 1; j < frames; j++) {
+                    if (lastUsed[j] < oldestTime) {
+                        oldestTime = lastUsed[j];
+                        victimIndex = j;
+                    }
+                }
+
+                frame[victimIndex] = page;
+                lastUsed[victimIndex] = time;
+            }
+        }
+
+        totalOccupiedUnits += filled;
+
+        // Capture current memory state into frame store matrix
+        for (int j = 0; j < frames; j++) {
+            frameStore[j][i] = frame[j];
+        }
+    }
+
+    SimResult r = new SimResult();
+    r.title = "LRU";
+    r.subtitle = "Least Recently Used";
+    r.desc = "Page that was least recently used is replaced.";
+    r.hFrame = frameStore;
+    r.hStatus = statusStore;
+    r.faults = faults;
+    r.hits = hits;
+    r.totalFilledFrames = totalOccupiedUnits;
+    r.writeBacks = -1;
+    return r;
+}
 
     /* ---------------------------------------- Second Chance (Clock) Algorithm ------------------------------------------- */
 
@@ -614,91 +615,91 @@ public class PageReplacementSimulator {
     /* ------------------------------------ MRU (Most Recently Used) Algorithm -------------------------------------------- */
 
     static SimResult runMRU() {
-        int[] frame = new int[MAX_FRAMES];
-        int[] lastUsed = new int[MAX_FRAMES];
+    int[] frame = new int[MAX_FRAMES];
+    int[] lastUsed = new int[MAX_FRAMES];
 
-        int[][] historyFrame = new int[MAX_FRAMES][MAX_N];
-        String[] historyStatus = new String[MAX_N];
+    int[][] frameStore = new int[MAX_FRAMES][MAX_N];
+    String[] statusStore = new String[MAX_N];
 
-        int page;
-        int found;
-        int time = 0;
-        int filled = 0;
-        int faults = 0;
-        int hits = 0;
-        int totalOccupiedUnits = 0;
+    int page;
+    int found;
+    int time = 0;
+    int filled = 0;
+    int faults = 0;
+    int hits = 0;
+    int totalOccupiedUnits = 0;
 
-        int victimIndex;
-        int newestTime;
+    int victimIndex;
+    int newestTime;
 
-        for (int i = 0; i < frames; i++) {
-            frame[i] = -1;
-            lastUsed[i] = 0;
-        }
-
-        for (int i = 0; i < n; i++) {
-            page = refString[i];
-            found = 0;
-            time++;
-
-            // Check if requested page is already in memory
-            for (int j = 0; j < frames; j++) {
-                if (frame[j] == page) {
-                    found = 1;
-                    lastUsed[j] = time;
-                    hits++;
-                    historyStatus[i] = "HIT";
-                    break;
-                }
-            }
-
-            // Page fault
-            if (found == 0) {
-                faults++;
-                historyStatus[i] = "FAULT";
-
-                // If empty frame exists, insert page directly
-                if (filled < frames) {
-                    frame[filled] = page;
-                    lastUsed[filled] = time;
-                    filled++;
-                } else {
-                    // Find the most recently used page
-                    victimIndex = 0;
-                    newestTime = lastUsed[0];
-
-                    for (int j = 1; j < frames; j++) {
-                        if (lastUsed[j] > newestTime) {
-                            newestTime = lastUsed[j];
-                            victimIndex = j;
-                        }
-                    }
-
-                    frame[victimIndex] = page;
-                    lastUsed[victimIndex] = time;
-                }
-            }
-
-            totalOccupiedUnits += filled;
-
-            // Capture current memory state into history matrix
-            for (int j = 0; j < frames; j++) {
-                historyFrame[j][i] = frame[j];
-            }
-        }
-
-        SimResult r = new SimResult();
-        r.title = "MRU";
-        r.subtitle = "Most Recently Used";
-        r.desc = "Page that was most recently used is replaced.";
-        r.hFrame = historyFrame;
-        r.hStatus = historyStatus;
-        r.faults = faults;
-        r.hits = hits;
-        r.totalFilledFrames = totalOccupiedUnits;
-        r.writeBacks = -1;
-        return r;
+    for (int i = 0; i < frames; i++) {
+        frame[i] = -1;
+        lastUsed[i] = 0;
     }
+
+    for (int i = 0; i < n; i++) {
+        page = refString[i];
+        found = 0;
+        time++;
+
+        // Check if requested page is already in memory
+        for (int j = 0; j < frames; j++) {
+            if (frame[j] == page) {
+                found = 1;
+                lastUsed[j] = time;
+                hits++;
+                statusStore[i] = "HIT";
+                break;
+            }
+        }
+
+        // Page fault
+        if (found == 0) {
+            faults++;
+            statusStore[i] = "FAULT";
+
+            // If empty frame exists, insert page directly
+            if (filled < frames) {
+                frame[filled] = page;
+                lastUsed[filled] = time;
+                filled++;
+            } else {
+                // Find the most recently used page
+                victimIndex = 0;
+                newestTime = lastUsed[0];
+
+                for (int j = 1; j < frames; j++) {
+                    if (lastUsed[j] > newestTime) {
+                        newestTime = lastUsed[j];
+                        victimIndex = j;
+                    }
+                }
+
+                frame[victimIndex] = page;
+                lastUsed[victimIndex] = time;
+            }
+        }
+
+        totalOccupiedUnits += filled;
+
+        // Capture current memory state into frame store matrix
+        for (int j = 0; j < frames; j++) {
+            frameStore[j][i] = frame[j];
+        }
+    }
+
+    SimResult r = new SimResult();
+    r.title = "MRU";
+    r.subtitle = "Most Recently Used";
+    r.desc = "Page that was most recently used is replaced.";
+    r.hFrame = frameStore;
+    r.hStatus = statusStore;
+    r.faults = faults;
+    r.hits = hits;
+    r.totalFilledFrames = totalOccupiedUnits;
+    r.writeBacks = -1;
+    return r;
+}
 
     /* ---------------------------------- WSCLOCK (Working Set Clock) Algorithm ------------------------------------------- */
 
