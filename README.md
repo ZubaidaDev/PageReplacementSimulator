@@ -1,166 +1,159 @@
 # Page Replacement Simulator
 
-A virtual memory page replacement simulator that demonstrates how pages are loaded into memory frames and how page faults and hits occur.
+A virtual memory simulator for comparing page replacement algorithms against the same reference workload.
 
-This project includes two versions:
+The project is centered on a **C console implementation** that shows page-by-page memory state, page faults, hits, and replacement decisions. A **Java Swing GUI** was added later as a companion visualization of the same algorithm family.
 
-* C console version
-* Java Swing GUI version
+## Algorithms
+
+| Algorithm      | Replacement Strategy                                                  |
+| -------------- | --------------------------------------------------------------------- |
+| FIFO           | Replaces the page that entered memory first                           |
+| LRU            | Replaces the least recently used page                                 |
+| Second Chance  | Extends FIFO with a reference bit                                     |
+| LFU with Aging | Uses access frequency with periodic aging                             |
+| MRU            | Replaces the most recently used page                                  |
+| WSClock        | Uses reference, modified, and age information with a clock-style scan |
 
 ## Features
 
-The simulator supports the following page replacement algorithms:
+* Six page replacement algorithms
+* Configurable frame count and reference string
+* Optional read/write operations for WSClock
+* Per-step frame state visualization
+* Page fault and hit tracking
+* Fault and hit rate calculation
+* Average frame occupancy reporting
+* Reference-bit tracking for Second Chance
+* Reference and modified-bit tracking for WSClock
+* WSClock write-back counting
 
-* FIFO
-* LRU
-* Second Chance
-* LFU with Dynamic Aging
-* MRU
-* WSClock
+## Implementations
 
-## Project Files
+### C Console Simulator
 
-* `page_replacement_simulator.c` - C console version
-* `PageReplacementSimulator.java` - Java Swing GUI version
-* `README.md` - Project documentation
+`page_replacement_simulator.c` is the primary implementation in this repository.
 
-## Description
+It supports up to:
 
-This project simulates different virtual memory page replacement algorithms. It helps users understand how pages are stored in memory frames and how the system handles page hits and page faults.
+* 10 memory frames
+* 50 page references
 
-The C version runs in the console and displays the output in text format.
-The Java version uses a Swing GUI to display the results in a more visual and user-friendly way.
+The simulator displays frame contents after each page request together with the hit or fault status and a final summary.
 
-## Algorithms Included
+The C WSClock implementation uses a fixed working-set threshold of `TAU = 4`.
 
-### FIFO
+### Java Swing GUI
 
-FIFO stands for First In, First Out.
-The oldest page in memory is replaced first when a page fault occurs.
+`PageReplacementSimulator.java` is a later graphical implementation providing:
 
-### LRU
+* interactive configuration
+* algorithm selection
+* result tables
+* hit/fault statistics
+* frame-state visualization
+* fault-versus-hit chart
+* configurable WSClock `TAU`
 
-LRU stands for Least Recently Used.
-The page that has not been used for the longest time is replaced.
+The Java version is a companion implementation rather than an exact port of the C version.
 
-### Second Chance
+## Build and Run
 
-Second Chance uses a reference bit.
-If a page has been recently used, it gets a second chance before replacement.
+### C
 
-### LFU with Dynamic Aging
-
-LFU stands for Least Frequently Used.
-The page with the lowest frequency score is replaced. Dynamic aging helps reduce the effect of old page usage over time.
-
-### MRU
-
-MRU stands for Most Recently Used.
-The page that was most recently used is replaced when a page fault occurs.
-
-### WSClock
-
-WSClock stands for Working Set Clock.
-It uses reference bits, modified bits, page age, and write backs to decide which page should be replaced.
-
-## How to Run the C Version
-
-Compile the C program:
+Compile with GCC or Clang:
 
 ```bash
-gcc page_replacement_simulator.c -o simulator
+gcc -std=c11 -Wall -Wextra page_replacement_simulator.c -o simulator
 ```
 
-Run the program:
+Run on Linux or macOS:
 
 ```bash
 ./simulator
 ```
 
-On Windows, run:
+Run on Windows:
 
 ```bash
 simulator.exe
 ```
 
-## How to Run the Java GUI Version
+### Java
 
-Make sure the Java file name is exactly:
-
-```text
-PageReplacementSimulator.java
-```
-
-Compile the Java program:
+Compile:
 
 ```bash
 javac PageReplacementSimulator.java
 ```
 
-Run the Java program:
+Run:
 
 ```bash
 java PageReplacementSimulator
 ```
 
-## How to Run in Eclipse
+Java 8 or later is recommended.
 
-1. Open Eclipse.
-2. Create a new Java Project.
-3. Create a new class named `PageReplacementSimulator`.
-4. Paste the Java code into the class file.
-5. Save the file.
-6. Right-click the file.
-7. Select `Run As > Java Application`.
+## Default Workload
 
-## Java GUI Version
+**Frames:** `3`
 
-The Java version provides a graphical interface using Swing.
-
-It includes:
-
-* Setup window
-* Algorithm menu
-* Result table
-* Page fault and hit summary
-* Fault rate and hit rate
-* Memory utilization
-* Write backs for WSClock
-* Fault vs hit chart
-
-## Sample Default Input
-
-Default number of frames:
-
-```text
-3
-```
-
-Default reference string:
+**Reference string:**
 
 ```text
 0, 4, 1, 4, 2, 4, 3, 4, 2, 4, 0, 4, 1, 4, 2, 2, 3, 1
 ```
 
-Default WSClock operations:
+**WSClock operations:**
 
 ```text
 R, W, R, R, W, R, R, W, R, R, W, R, R, W, R, R, W, R
 ```
 
-## Output Summary
+For custom input, use:
 
-The simulator displays:
+* 1 to 10 frames
+* 1 to 50 page references
+* non-negative page numbers
+* `R` or `W` operations for WSClock
 
-* Frame contents at each step
-* Hit or fault status
-* Total page faults
-* Total hits
-* Fault rate
-* Hit rate
-* Memory utilization
-* Write backs for WSClock
+## Output
 
-## Purpose
+Each simulation reports:
 
-The purpose of this project is to understand and compare different page replacement algorithms used in operating systems. It shows how each algorithm makes a replacement decision when memory frames are full.
+* frame contents after every page reference
+* page hit or fault at each step
+* total page faults
+* total hits
+* fault rate
+* hit rate
+* average frame occupancy
+* WSClock write-backs when applicable
+
+Second Chance displays frame entries as:
+
+```text
+[Page|Reference Bit]
+```
+
+WSClock displays:
+
+```text
+[Page|Reference Bit|Modified Bit]
+```
+
+## Project Structure
+
+```text
+PageReplacementSimulator/
+├── page_replacement_simulator.c   # Primary C implementation
+├── PageReplacementSimulator.java  # Java Swing companion GUI
+└── README.md
+```
+
+## Scope
+
+This project is designed to demonstrate and compare page replacement behavior under controlled workloads.
+
+It models page replacement decision logic for educational and experimental purposes rather than implementing a complete operating-system virtual memory subsystem.
